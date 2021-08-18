@@ -1,6 +1,10 @@
 package main
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
+	"time"
+
 	"github.com/xwb1989/sqlparser"
 	"syreclabs.com/go/faker"
 )
@@ -64,4 +68,18 @@ func generatePostcode(value *sqlparser.SQLVal) *sqlparser.SQLVal {
 
 func generateJob(value *sqlparser.SQLVal) *sqlparser.SQLVal {
 	return sqlparser.NewStrVal([]byte(faker.Name().Title()))
+}
+
+func generateSHA1(value *sqlparser.SQLVal) *sqlparser.SQLVal {
+	// thanks to https://stackoverflow.com/questions/10701874/generating-the-sha-hash-of-a-string-using-golang
+	now := time.Now()
+	str := now.String()
+	hasher := sha1.New()
+	hasher.Write([]byte(str))
+	sha1_hash := hex.EncodeToString(hasher.Sum(nil))
+	return sqlparser.NewStrVal([]byte(sha1_hash))
+}
+
+func generatePrice(value *sqlparser.SQLVal) *sqlparser.SQLVal {
+	return sqlparser.NewStrVal([]byte(faker.Number().Decimal(6, 2)))
 }

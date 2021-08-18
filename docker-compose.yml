@@ -1,0 +1,9 @@
+version: '3'
+
+services:
+    ubuntu:
+        build: ./docker
+        container_name: anonymizer
+        volumes:
+            - .:/anonymizer
+        # mem_limit: 300m

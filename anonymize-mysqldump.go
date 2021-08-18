@@ -54,6 +54,8 @@ var (
 		"address":   generateAddress,
 		"postcode":  generatePostcode,
 		"job":       generateJob,
+		"sha1":      generateSHA1,
+		"price":     generatePrice,
 	}
 )
 
@@ -309,31 +311,59 @@ func modifyValues(values sqlparser.Values, pattern ConfigPattern) (sqlparser.Val
 			if sqlparser.IsNull(testNull) == true {
 				continue
 			}
-			value := values[row][valTupleIndex].(*sqlparser.SQLVal)
+			switch testNull.(type) {
+			case *sqlparser.UnaryExpr:
+				value := generatePrice(nil)
+				// Skip transformation if transforming function doesn't exist
+				if transformationFunctionMap[fieldPattern.Type] == nil {
+					// TODO in the event a transformation function isn't correctly defined,
+					// should we actually exit? Should we exit or fail softly whenever
+					// something goes wrong in general?
+					logrus.WithFields(logrus.Fields{
+						"type":  fieldPattern.Type,
+						"field": fieldPattern.Field,
+					}).Error("Failed applying transformation type for field")
+					continue
+				}
 
-			// Skip transformation if transforming function doesn't exist
-			if transformationFunctionMap[fieldPattern.Type] == nil {
-				// TODO in the event a transformation function isn't correctly defined,
-				// should we actually exit? Should we exit or fail softly whenever
-				// something goes wrong in general?
-				logrus.WithFields(logrus.Fields{
-					"type":  fieldPattern.Type,
-					"field": fieldPattern.Field,
-				}).Error("Failed applying transformation type for field")
-				continue
+				// Skipping applying a transformation because field is empty
+				if len(value.Val) == 0 {
+					continue
+				}
+
+				// Skip this PatternField if none of its constraints match
+				if fieldPattern.Constraints != nil && !rowObeysConstraints(fieldPattern.Constraints, values[row]) {
+					continue
+				}
+
+				values[row][valTupleIndex] = value
+			case *sqlparser.SQLVal:
+				value := values[row][valTupleIndex].(*sqlparser.SQLVal)
+
+				// Skip transformation if transforming function doesn't exist
+				if transformationFunctionMap[fieldPattern.Type] == nil {
+					// TODO in the event a transformation function isn't correctly defined,
+					// should we actually exit? Should we exit or fail softly whenever
+					// something goes wrong in general?
+					logrus.WithFields(logrus.Fields{
+						"type":  fieldPattern.Type,
+						"field": fieldPattern.Field,
+					}).Error("Failed applying transformation type for field")
+					continue
+				}
+
+				// Skipping applying a transformation because field is empty
+				if len(value.Val) == 0 {
+					continue
+				}
+
+				// Skip this PatternField if none of its constraints match
+				if fieldPattern.Constraints != nil && !rowObeysConstraints(fieldPattern.Constraints, values[row]) {
+					continue
+				}
+
+				values[row][valTupleIndex] = transformationFunctionMap[fieldPattern.Type](value)
 			}
-
-			// Skipping applying a transformation because field is empty
-			if len(value.Val) == 0 {
-				continue
-			}
-
-			// Skip this PatternField if none of its constraints match
-			if fieldPattern.Constraints != nil && !rowObeysConstraints(fieldPattern.Constraints, values[row]) {
-				continue
-			}
-
-			values[row][valTupleIndex] = transformationFunctionMap[fieldPattern.Type](value)
 		}
 
 	}
