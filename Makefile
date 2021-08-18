@@ -1,10 +1,11 @@
 BINARY = go-anonymize-mysqldump
 BUILDDIR = ./build
+GO_ANONYMIZE=go-anonymize-mysqldump_linux_amd64
 
-all: clean vet fmt lint test build
+all: clean vet fmt lint test build put_local
 
 build:
-	gox -os="linux" -os="darwin" -os="windows" -arch="amd64" -arch="386" -output="${BUILDDIR}/${BINARY}_{{.OS}}_{{.Arch}}"
+	gox -os="linux" -arch="amd64" -arch="386" -output="${BUILDDIR}/${BINARY}_{{.OS}}_{{.Arch}}"
 	gzip build/*
 
 vet:
@@ -29,4 +30,9 @@ run-test-watch:
 clean:
 	rm -rf ${BUILDDIR}
 
-.PHONY: all clean vet fmt lint test build
+put_local:
+	gunzip ${BUILDDIR}/${GO_ANONYMIZE}.gz
+	cp ${BUILDDIR}/${GO_ANONYMIZE} /usr/local/bin/anonymize-mysqldump
+	chmod +x /usr/local/bin/anonymize-mysqldump
+
+.PHONY: all clean vet fmt lint test build put_local

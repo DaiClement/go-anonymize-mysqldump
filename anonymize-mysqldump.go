@@ -4,14 +4,15 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"github.com/akamensky/argparse"
-	"github.com/sirupsen/logrus"
-	"github.com/xwb1989/sqlparser"
 	"io"
 	"io/ioutil"
 	"os"
 	"strings"
 	"sync"
+
+	"github.com/akamensky/argparse"
+	"github.com/sirupsen/logrus"
+	"github.com/xwb1989/sqlparser"
 )
 
 type Config struct {
@@ -47,6 +48,12 @@ var (
 		"lastName":  generateLastName,
 		"paragraph": generateParagraph,
 		"ipv4":      generateIPv4,
+		"company":   generateCompany,
+		"phone":     generatePhone,
+		"city":      generateCity,
+		"address":   generateAddress,
+		"postcode":  generatePostcode,
+		"job":       generateJob,
 	}
 )
 
@@ -296,6 +303,12 @@ func modifyValues(values sqlparser.Values, pattern ConfigPattern) (sqlparser.Val
 			// Position is 1 indexed instead of 0, so let's subtract 1 in order to get
 			// it to line up with the value inside the ValTuple inside of values.Values
 			valTupleIndex := fieldPattern.Position - 1
+
+			testNull := values[row][valTupleIndex]
+
+			if sqlparser.IsNull(testNull) == true {
+				continue
+			}
 			value := values[row][valTupleIndex].(*sqlparser.SQLVal)
 
 			// Skip transformation if transforming function doesn't exist

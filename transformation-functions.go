@@ -41,3 +41,27 @@ func generateParagraph(value *sqlparser.SQLVal) *sqlparser.SQLVal {
 func generateIPv4(value *sqlparser.SQLVal) *sqlparser.SQLVal {
 	return sqlparser.NewStrVal([]byte(faker.Internet().IpV4Address()))
 }
+
+func generatePhone(value *sqlparser.SQLVal) *sqlparser.SQLVal {
+	return sqlparser.NewStrVal([]byte("06" + faker.PhoneNumber().SubscriberNumber(8)))
+}
+
+func generateCompany(value *sqlparser.SQLVal) *sqlparser.SQLVal {
+	return sqlparser.NewStrVal([]byte(faker.Company().Name()))
+}
+
+func generateCity(value *sqlparser.SQLVal) *sqlparser.SQLVal {
+	return sqlparser.NewStrVal([]byte(faker.Address().City()))
+}
+
+func generateAddress(value *sqlparser.SQLVal) *sqlparser.SQLVal {
+	return sqlparser.NewStrVal([]byte(faker.Address().StreetAddress()))
+}
+
+func generatePostcode(value *sqlparser.SQLVal) *sqlparser.SQLVal {
+	return sqlparser.NewStrVal([]byte(faker.Address().Postcode()))
+}
+
+func generateJob(value *sqlparser.SQLVal) *sqlparser.SQLVal {
+	return sqlparser.NewStrVal([]byte(faker.Name().Title()))
+}
